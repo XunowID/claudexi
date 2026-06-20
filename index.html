@@ -475,6 +475,114 @@ a:hover{text-decoration:underline}
 .provider-status{
   display:flex;flex-direction:column;gap:6px;
 }
+
+/* Provider cards (free-claude-code inspired) */
+.provider-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.provider-card-item {
+  background: var(--bg-deep);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  transition: border-color var(--transition);
+}
+.provider-card-item:hover { border-color: var(--border-hover); }
+.provider-card-item.free-provider {
+  border-style: dashed;
+  border-color: rgba(34,197,94,0.3);
+  background: rgba(34,197,94,0.03);
+}
+.provider-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.provider-card-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
+}
+.provider-card-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.status-pill {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.status-pill.ok { background: rgba(34,197,94,0.15); color: var(--success); }
+.status-pill.no { background: rgba(239,68,68,0.1); color: var(--error); }
+.status-pill.free { background: rgba(34,197,94,0.1); color: var(--success); }
+.provider-card-input {
+  display: flex;
+  gap: 6px;
+}
+.provider-card-input .key-input {
+  flex: 1;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  padding: 7px 10px;
+  font-size: 12px;
+  font-family: var(--font-mono);
+  outline: none;
+  transition: border var(--transition);
+}
+.provider-card-input .key-input:focus { border-color: var(--accent); }
+.provider-card-input .key-input::placeholder { color: var(--text-muted); font-family: var(--font-sans); font-size: 11px; }
+.provider-card-input .test-btn {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 11px;
+  cursor: pointer;
+  padding: 0 10px;
+  white-space: nowrap;
+  transition: all var(--transition);
+  font-family: var(--font-sans);
+}
+.provider-card-input .test-btn:hover { background: var(--bg-card-hover); color: var(--text-primary); border-color: var(--accent); }
+.provider-card-input .test-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.provider-card-desc {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 6px;
+  padding-left: 2px;
+}
+.divider-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-muted);
+  font-weight: 600;
+  padding: 8px 0 4px;
+  text-align: center;
+  position: relative;
+}
+.divider-label::before, .divider-label::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 35%;
+  height: 1px;
+  background: var(--border);
+}
+.divider-label::before { left: 0; }
+.divider-label::after { right: 0; }
+
 .provider-item{
   display:flex;align-items:center;justify-content:space-between;
   padding:8px 12px;background:var(--bg-deep);
@@ -683,43 +791,149 @@ a:hover{text-decoration:underline}
 
     <div class="setting-group">
       <h3>🔑 API Keys</h3>
-      <div class="provider-status" id="providerStatus">
-        <div class="provider-item">
-          <span class="name"><span class="dot no" id="kClaudeDot"></span> Anthropic (Claude)</span>
-          <input class="key-input" id="keyAnthropic" type="password" placeholder="sk-ant-..." oninput="saveKey('anthropic',this.value);updateKeyStatus()">
+      <div class="provider-cards" id="providerStatus">
+
+        <div class="provider-card-item" id="cardAnthropic">
+          <div class="provider-card-header">
+            <span class="provider-card-name">🤖 Anthropic (Claude)</span>
+            <span class="provider-card-status">
+              <span class="status-pill no" id="pillAnthropic">Not configured</span>
+            </span>
+          </div>
+          <div class="provider-card-input">
+            <input class="key-input" id="keyAnthropic" type="password" placeholder="sk-ant-..." autocomplete="off">
+            <button class="test-btn" onclick="testProvider('anthropic',this)">Test</button>
+          </div>
+          <div class="provider-card-desc">claude-3.5-haiku &middot; claude-3.5-sonnet &middot; claude-opus-4</div>
         </div>
-        <div class="provider-item">
-          <span class="name"><span class="dot no" id="kOpenAIDot"></span> OpenAI (GPT)</span>
-          <input class="key-input" id="keyOpenAI" type="password" placeholder="sk-..." oninput="saveKey('openai',this.value);updateKeyStatus()">
+
+        <div class="provider-card-item" id="cardOpenAI">
+          <div class="provider-card-header">
+            <span class="provider-card-name">🧠 OpenAI (GPT)</span>
+            <span class="provider-card-status">
+              <span class="status-pill no" id="pillOpenAI">Not configured</span>
+            </span>
+          </div>
+          <div class="provider-card-input">
+            <input class="key-input" id="keyOpenAI" type="password" placeholder="sk-..." autocomplete="off">
+            <button class="test-btn" onclick="testProvider('openai',this)">Test</button>
+          </div>
+          <div class="provider-card-desc">gpt-4o &middot; gpt-4o-mini</div>
         </div>
-        <div class="provider-item">
-          <span class="name"><span class="dot no" id="kGroqDot"></span> Groq (Free)</span>
-          <input class="key-input" id="keyGroq" type="password" placeholder="gsk_..." oninput="saveKey('groq',this.value);updateKeyStatus()">
+
+        <div class="provider-card-item" id="cardGroq">
+          <div class="provider-card-header">
+            <span class="provider-card-name">⚡ Groq (Free tier)</span>
+            <span class="provider-card-status">
+              <span class="status-pill no" id="pillGroq">Not configured</span>
+            </span>
+          </div>
+          <div class="provider-card-input">
+            <input class="key-input" id="keyGroq" type="password" placeholder="gsk_..." autocomplete="off">
+            <button class="test-btn" onclick="testProvider('groq',this)">Test</button>
+          </div>
+          <div class="provider-card-desc">llama-3.3-70b-versatile</div>
         </div>
-        <div class="provider-item">
-          <span class="name"><span class="dot no" id="kGeminiDot"></span> Gemini (Free)</span>
-          <input class="key-input" id="keyGemini" type="password" placeholder="AIza..." oninput="saveKey('gemini',this.value);updateKeyStatus()">
+
+        <div class="provider-card-item" id="cardGemini">
+          <div class="provider-card-header">
+            <span class="provider-card-name">🌊 Gemini (Free tier)</span>
+            <span class="provider-card-status">
+              <span class="status-pill no" id="pillGemini">Not configured</span>
+            </span>
+          </div>
+          <div class="provider-card-input">
+            <input class="key-input" id="keyGemini" type="password" placeholder="AIza..." autocomplete="off">
+            <button class="test-btn" onclick="testProvider('gemini',this)">Test</button>
+          </div>
+          <div class="provider-card-desc">gemini-2.0-flash</div>
         </div>
-        <div class="provider-item">
-          <span class="name"><span class="dot no" id="kDeepSeekDot"></span> DeepSeek</span>
-          <input class="key-input" id="keyDeepSeek" type="password" placeholder="sk-..." oninput="saveKey('deepseek',this.value);updateKeyStatus()">
+
+        <div class="provider-card-item" id="cardDeepSeek">
+          <div class="provider-card-header">
+            <span class="provider-card-name">🔍 DeepSeek</span>
+            <span class="provider-card-status">
+              <span class="status-pill no" id="pillDeepSeek">Not configured</span>
+            </span>
+          </div>
+          <div class="provider-card-input">
+            <input class="key-input" id="keyDeepSeek" type="password" placeholder="sk-..." autocomplete="off">
+            <button class="test-btn" onclick="testProvider('deepseek',this)">Test</button>
+          </div>
+          <div class="provider-card-desc">deepseek-chat</div>
         </div>
-        <div class="provider-item">
-          <span class="name"><span class="dot no" id="kOpenRouterDot"></span> OpenRouter</span>
-          <input class="key-input" id="keyOpenRouter" type="password" placeholder="sk-or-..." oninput="saveKey('openrouter',this.value);updateKeyStatus()">
+
+        <div class="provider-card-item" id="cardOpenRouter">
+          <div class="provider-card-header">
+            <span class="provider-card-name">🔄 OpenRouter</span>
+            <span class="provider-card-status">
+              <span class="status-pill no" id="pillOpenRouter">Not configured</span>
+            </span>
+          </div>
+          <div class="provider-card-input">
+            <input class="key-input" id="keyOpenRouter" type="password" placeholder="sk-or-..." autocomplete="off">
+            <button class="test-btn" onclick="testProvider('openrouter',this)">Test</button>
+          </div>
+          <div class="provider-card-desc">Custom model &mdash; see openrouter.ai/models</div>
         </div>
-        <div class="provider-item">
-          <span class="name"><span class="dot no" id="kMistralDot"></span> Mistral AI</span>
-          <input class="key-input" id="keyMistral" type="password" placeholder="..." oninput="saveKey('mistral',this.value);updateKeyStatus()">
+
+        <div class="provider-card-item" id="cardMistral">
+          <div class="provider-card-header">
+            <span class="provider-card-name">💧 Mistral AI</span>
+            <span class="provider-card-status">
+              <span class="status-pill no" id="pillMistral">Not configured</span>
+            </span>
+          </div>
+          <div class="provider-card-input">
+            <input class="key-input" id="keyMistral" type="password" placeholder="Mistral API key" autocomplete="off">
+            <button class="test-btn" onclick="testProvider('mistral',this)">Test</button>
+          </div>
+          <div class="provider-card-desc">mistral-large-latest</div>
         </div>
-        <div class="provider-item">
-          <span class="name"><span class="dot no" id="kOpenCodeDot"></span> OpenCode AI</span>
-          <input class="key-input" id="keyOpenCode" type="password" placeholder="oc_..." oninput="saveKey('opencode',this.value);updateKeyStatus()">
+
+        <div class="provider-card-item" id="cardOpenCode">
+          <div class="provider-card-header">
+            <span class="provider-card-name">💻 OpenCode AI</span>
+            <span class="provider-card-status">
+              <span class="status-pill no" id="pillOpenCode">Not configured</span>
+            </span>
+          </div>
+          <div class="provider-card-input">
+            <input class="key-input" id="keyOpenCode" type="password" placeholder="oc_..." autocomplete="off">
+            <button class="test-btn" onclick="testProvider('opencode',this)">Test</button>
+          </div>
+          <div class="provider-card-desc">opencode-default</div>
         </div>
-        <div class="provider-item">
-          <span class="name"><span class="dot no" id="kGlmDot"></span> GLM (Zhipu AI)</span>
-          <input class="key-input" id="keyGlm" type="password" placeholder="..." oninput="saveKey('glm',this.value);updateKeyStatus()">
+
+        <div class="provider-card-item" id="cardGlm">
+          <div class="provider-card-header">
+            <span class="provider-card-name">🏯 GLM (Zhipu AI)</span>
+            <span class="provider-card-status">
+              <span class="status-pill no" id="pillGlm">Not configured</span>
+            </span>
+          </div>
+          <div class="provider-card-input">
+            <input class="key-input" id="keyGlm" type="password" placeholder="GLM API key" autocomplete="off">
+            <button class="test-btn" onclick="testProvider('glm',this)">Test</button>
+          </div>
+          <div class="provider-card-desc">glm-4-plus</div>
         </div>
+
+        <div class="divider-label">FREE &mdash; NO KEY NEEDED</div>
+
+        <div class="provider-card-item free-provider" id="cardPollinations">
+          <div class="provider-card-header">
+            <span class="provider-card-name">🌸 Pollinations AI</span>
+            <span class="provider-card-status">
+              <span class="status-pill free">Always free</span>
+            </span>
+          </div>
+          <div class="provider-card-input">
+            <input class="key-input" id="keyPollinations" type="text" value="No API key needed &mdash; works instantly" disabled style="opacity:0.6;cursor:default;">
+          </div>
+          <div class="provider-card-desc">Models: openai, mistral, mixtral, llama3, qwen, phi, gemini-pro, gemma</div>
+        </div>
+
       </div>
     </div>
 
@@ -769,7 +983,7 @@ a:hover{text-decoration:underline}
 const APP = {
   chats: JSON.parse(localStorage.getItem('cx_chats') || '[]'),
   activeChatId: localStorage.getItem('cx_active') || null,
-  currentModel: localStorage.getItem('cx_model') || 'claude-3.5-sonnet',
+  currentModel: localStorage.getItem('cx_model') || 'pollinations',
   streaming: false,
   abortController: null,
 };
@@ -790,18 +1004,72 @@ function hasKey(provider) {
 function updateKeyStatus() {
   const providers = ['anthropic','openai','groq','gemini','deepseek','openrouter','mistral','opencode','glm','pollinations'];
   providers.forEach(p => {
-    const id = 'k' + p.charAt(0).toUpperCase() + p.slice(1) + 'Dot';
-    const dot = document.getElementById(id);
-    if(dot) dot.className = 'dot ' + (hasKey(p) ? 'ok' : 'no');
+    if(p === 'pollinations') return;
+    const pill = document.getElementById('pill' + p.charAt(0).toUpperCase() + p.slice(1));
+    if(pill) {
+      const ok = hasKey(p);
+      pill.className = 'status-pill ' + (ok ? 'ok' : 'no');
+      pill.textContent = ok ? 'Configured' : 'Not configured';
+    }
   });
-  // Input fields sync
+  // Input sync: set placeholder text like free-claude-code style
   providers.forEach(p => {
     const el = document.getElementById('key' + p.charAt(0).toUpperCase() + p.slice(1));
-    if(el && !el.value) el.value = loadKey(p);
+    if(el && p !== 'pollinations') {
+      if(hasKey(p) && !el.value) {
+        el.placeholder = 'Configured \u2014 enter new value to replace';
+      } else if(!hasKey(p) && !el.value) {
+        el.placeholder = el.dataset.defaultPlaceholder || 'Not configured';
+      }
+    }
   });
   // Update key status icon
   const hasAny = providers.some(p => hasKey(p));
   document.getElementById('keyStatusIcon').textContent = hasAny ? '🔑' : '🔒';
+}
+
+// ─── Provider Testing ────────────────────────────
+async function testProvider(provider, btn) {
+  const key = loadKey(provider);
+  if(!key) { showToast('⚠️ No API key configured for ' + provider); return; }
+  const originalText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '...';
+  try {
+    const endpoints = {
+      'anthropic': { url: 'https://api.anthropic.com/v1/messages', headers: {'x-api-key': key, 'anthropic-version': '2023-06-01'}, body: {model:'claude-3-5-haiku-latest',max_tokens:1,messages:[{role:'user',content:'hi'}]} },
+      'openai': { url: 'https://api.openai.com/v1/chat/completions', headers: {'Authorization': 'Bearer '+key}, body: {model:'gpt-4o-mini',messages:[{role:'user',content:'hi'}],max_tokens:1} },
+      'groq': { url: 'https://api.groq.com/openai/v1/chat/completions', headers: {'Authorization': 'Bearer '+key}, body: {model:'llama-3.3-70b-versatile',messages:[{role:'user',content:'hi'}],max_tokens:1} },
+      'gemini': { url: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='+key, headers: {}, body: {contents:[{parts:[{text:'hi'}]}],generationConfig:{maxOutputTokens:1}} },
+      'deepseek': { url: 'https://api.deepseek.com/v1/chat/completions', headers: {'Authorization': 'Bearer '+key}, body: {model:'deepseek-chat',messages:[{role:'user',content:'hi'}],max_tokens:1} },
+      'openrouter': { url: 'https://openrouter.ai/api/v1/chat/completions', headers: {'Authorization': 'Bearer '+key}, body: {model:'anthropic/claude-3.5-haiku',messages:[{role:'user',content:'hi'}],max_tokens:1} },
+      'mistral': { url: 'https://api.mistral.ai/v1/chat/completions', headers: {'Authorization': 'Bearer '+key}, body: {model:'mistral-large-latest',messages:[{role:'user',content:'hi'}],max_tokens:1} },
+      'opencode': { url: 'https://api.opencode.ai/v1/chat/completions', headers: {'Authorization': 'Bearer '+key}, body: {model:'opencode-default',messages:[{role:'user',content:'hi'}],max_tokens:1} },
+      'glm': { url: 'https://open.bigmodel.cn/api/paas/v4/chat/completions', headers: {'Authorization': 'Bearer '+key}, body: {model:'glm-4-plus',messages:[{role:'user',content:'hi'}],max_tokens:1} },
+    };
+    const ep = endpoints[provider];
+    if(!ep) { showToast('⚠️ Unknown provider'); btn.disabled = false; btn.textContent = originalText; return; }
+    const resp = await fetch(ep.url, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', ...ep.headers},
+      body: JSON.stringify(ep.body),
+    });
+    if(resp.ok) {
+      showToast('✅ ' + provider.charAt(0).toUpperCase() + provider.slice(1) + ' key works!');
+      // Update pill
+      const pill = document.getElementById('pill' + provider.charAt(0).toUpperCase() + provider.slice(1));
+      if(pill) { pill.className = 'status-pill ok'; pill.textContent = 'Works!'; }
+    } else {
+      const body = await resp.text();
+      let msg = body.slice(0, 80);
+      try { const j = JSON.parse(body); msg = j.error?.message || j.error?.code || msg; } catch(e) {}
+      showToast('❌ ' + provider + ': ' + msg);
+    }
+  } catch(err) {
+    showToast('❌ Connection error: ' + err.message);
+  }
+  btn.disabled = false;
+  btn.textContent = originalText;
 }
 
 // ─── Chat Model Name ──────────────────────────────
@@ -1352,20 +1620,29 @@ function closeSidebar() {
 function openSettings() {
   document.getElementById('settingsOverlay').classList.add('show');
   document.getElementById('settingsPanel').classList.add('show');
-  updateKeyStatus(); // Sync key fields
+  // Clear all key inputs so they show placeholder only (never actual key value)
+  const provs = ['anthropic','openai','groq','gemini','deepseek','openrouter','mistral','opencode','glm'];
+  provs.forEach(p => {
+    const el = document.getElementById('key' + p.charAt(0).toUpperCase() + p.slice(1));
+    if(el) el.value = '';
+  });
+  updateKeyStatus(); // This will set placeholders
 }
 function closeSettings() {
   document.getElementById('settingsOverlay').classList.remove('show');
   document.getElementById('settingsPanel').classList.remove('show');
-  saveKey('anthropic', document.getElementById('keyAnthropic').value);
-  saveKey('openai', document.getElementById('keyOpenAI').value);
-  saveKey('groq', document.getElementById('keyGroq').value);
-  saveKey('gemini', document.getElementById('keyGemini').value);
-  saveKey('deepseek', document.getElementById('keyDeepSeek').value);
-  saveKey('openrouter', document.getElementById('keyOpenRouter').value);
-  saveKey('mistral', document.getElementById('keyMistral').value);
-  saveKey('opencode', document.getElementById('keyOpenCode').value);
-  saveKey('glm', document.getElementById('keyGlm').value);
+  // Save only if user typed something. If empty, keep existing (free-claude-code style)
+  const saveProviders = ['anthropic','openai','groq','gemini','deepseek','openrouter','mistral','opencode','glm'];
+  saveProviders.forEach(p => {
+    const el = document.getElementById('key' + p.charAt(0).toUpperCase() + p.slice(1));
+    if(el) {
+      if(el.value) {
+        saveKey(p, el.value);
+        el.value = ''; // Clear input, show "Configured" placeholder next time
+      }
+      // If empty, keep existing key (don't overwrite with empty string)
+    }
+  });
   updateKeyStatus();
 }
 
@@ -1416,10 +1693,26 @@ function init() {
   document.getElementById('modelSelect').value = APP.currentModel;
   document.getElementById('currentModelDisplay').textContent = modelDisplayName(APP.currentModel);
 
-  // Load saved keys into inputs
-  ['anthropic','openai','groq','gemini','deepseek','openrouter','mistral','opencode','glm','pollinations'].forEach(p => {
+  // Set default placeholders for each provider (never show actual key in input)
+  const keyProviders = ['anthropic','openai','groq','gemini','deepseek','openrouter','mistral','opencode','glm'];
+  const placeholders = {
+    anthropic: 'sk-ant-...',
+    openai: 'sk-...',
+    groq: 'gsk_...',
+    gemini: 'AIza...',
+    deepseek: 'sk-...',
+    openrouter: 'sk-or-...',
+    mistral: 'Mistral API key',
+    opencode: 'oc_...',
+    glm: 'GLM API key',
+  };
+  keyProviders.forEach(p => {
     const el = document.getElementById('key' + p.charAt(0).toUpperCase() + p.slice(1));
-    if(el) el.value = loadKey(p);
+    if(el) {
+      el.value = ''; // Never show the actual key
+      el.dataset.defaultPlaceholder = placeholders[p] || 'Not configured';
+      el.placeholder = hasKey(p) ? 'Configured \u2014 enter new value to replace' : (placeholders[p] || 'Not configured');
+    }
   });
   updateKeyStatus();
 
