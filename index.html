@@ -564,7 +564,7 @@ a:hover{text-decoration:underline}
     <div class="chat-list" id="chatList"></div>
 
     <div class="sidebar-footer">
-      <span>BYO API Key · No tracking</span>
+      <span>✨ Pollinations AI free built-in · No tracking</span>
       <span><a href="#" onclick="openSettings()">Settings</a> · <a href="https://github.com/XunowID/claudexi" target="_blank">GitHub</a></span>
     </div>
   </aside>
@@ -590,7 +590,7 @@ a:hover{text-decoration:underline}
       <div class="empty-state" id="emptyState">
         <div class="icon">🤖</div>
         <h2>ClaudeXI</h2>
-        <p>Free, open-source AI interface. Bring your own API key, chat with multiple models.</p>
+        <p>Free, open-source AI interface. Chat with AI instantly — no API key needed for Pollinations.</p>
         <div class="tips">
           <div class="tip-card" onclick="setPrompt('Explain quantum computing in simple terms with examples')">
             <div class="label">💡 Explain</div>
@@ -650,6 +650,7 @@ a:hover{text-decoration:underline}
       <div class="setting-row">
         <label for="modelSelect">Provider</label>
         <select id="modelSelect" onchange="onModelChange()">
+	      <option value="pollinations">Pollinations AI (Free, No Key)</option>
           <option value="claude-3.5-haiku">Claude 3.5 Haiku (fast)</option>
           <option value="claude-3.5-sonnet">Claude 3.5 Sonnet (balanced)</option>
           <option value="claude-opus-4">Claude Opus 4 (best)</option>
@@ -668,6 +669,11 @@ a:hover{text-decoration:underline}
         <label for="orModel">OpenRouter Model</label>
         <input type="text" id="orModel" placeholder="anthropic/claude-3.5-sonnet" oninput="localStorage.setItem('cx_or_model',this.value)">
         <div class="hint">See openrouter.ai/models for available models</div>
+      </div>
+      <div class="setting-row" id="pollModelRow">
+        <label for="pollModel">Pollinations Model</label>
+        <input type="text" id="pollModel" placeholder="openai (default), mistral, mixtral, llama3, qwen, phi..." oninput="localStorage.setItem('cx_poll_model',this.value)">
+        <div class="hint">See text.pollinations.ai/models for all options. Leave empty for default.</div>
       </div>
       <div class="setting-row">
         <label for="sysPrompt">System Prompt</label>
@@ -782,7 +788,7 @@ function hasKey(provider) {
 }
 
 function updateKeyStatus() {
-  const providers = ['anthropic','openai','groq','gemini','deepseek','openrouter','mistral','opencode','glm'];
+  const providers = ['anthropic','openai','groq','gemini','deepseek','openrouter','mistral','opencode','glm','pollinations'];
   providers.forEach(p => {
     const id = 'k' + p.charAt(0).toUpperCase() + p.slice(1) + 'Dot';
     const dot = document.getElementById(id);
@@ -813,6 +819,7 @@ function modelDisplayName(model) {
       'mistral': 'Mistral AI',
       'opencode': 'OpenCode AI',
       'glm': 'GLM (Zhipu AI)',
+      'pollinations': 'Pollinations AI (Free)',
   };
   return names[model] || model;
 }
@@ -827,6 +834,7 @@ function getActiveProvider(model) {
   if(model === 'mistral') return 'mistral';
   if(model === 'opencode') return 'opencode';
   if(model === 'glm') return 'glm';
+  if(model === 'pollinations') return 'pollinations';
   return 'anthropic';
 }
 
@@ -843,6 +851,7 @@ function getModelForProvider(model) {
     'mistral': 'mistral-large-latest',
     'opencode': 'opencode-default',
     'glm': 'glm-4-plus',
+    'pollinations': 'openai',
   };
   return map[model] || model;
 }
@@ -1058,7 +1067,7 @@ async function sendMessage() {
     const provider = getActiveProvider(model);
     const apiKey = loadKey(provider);
 
-    if(!apiKey) {
+    if(!apiKey && provider !== 'pollinations') {
       appendToLastAssistant('⚠️ **API key not configured.** Please open Settings and add your API key for ' + provider + '.');
       APP.streaming = false;
       sendBtn.disabled = false;
@@ -1090,6 +1099,10 @@ async function sendMessage() {
       await streamOpenAICompat(chat, apiKey, 'https://api.opencode.ai/v1/chat/completions', model, sysPrompt, temp, maxTok);
     } else if(provider === 'glm') {
       await streamOpenAICompat(chat, apiKey, 'https://open.bigmodel.cn/api/paas/v4/chat/completions', model, sysPrompt, temp, maxTok);
+    } else if(provider === 'pollinations') {
+      const pollModel = document.getElementById('pollModel').value.trim() || 'openai';
+      const pollKey = '';
+      await streamOpenAICompat(chat, pollKey, 'https://text.pollinations.ai/openai/chat/completions', pollModel, sysPrompt, temp, maxTok, true);
     }
   } catch(err) {
     appendToLastAssistant('❌ **Error:** ' + err.message);
@@ -1151,8 +1164,8 @@ async function streamOpenAI(chat, key, modelId, sysPrompt, temp, maxTok) {
 }
 
 // ─── Stream: OpenAI Compatible (Groq, DeepSeek) ──
-async function streamOpenAICompat(chat, key, baseUrl, modelId, sysPrompt, temp, maxTok) {
-  const model = getModelForProvider(modelId);
+async function streamOpenAICompat(chat, key, baseUrl, modelId, sysPrompt, temp, maxTok, skipMapping = false) {
+  const model = skipMapping ? modelId : getModelForProvider(modelId);
   const messages = buildMessages(chat, 'assistant', sysPrompt);
 
   const resp = await fetch(baseUrl, {
@@ -1404,7 +1417,7 @@ function init() {
   document.getElementById('currentModelDisplay').textContent = modelDisplayName(APP.currentModel);
 
   // Load saved keys into inputs
-  ['anthropic','openai','groq','gemini','deepseek','openrouter','mistral','opencode','glm'].forEach(p => {
+  ['anthropic','openai','groq','gemini','deepseek','openrouter','mistral','opencode','glm','pollinations'].forEach(p => {
     const el = document.getElementById('key' + p.charAt(0).toUpperCase() + p.slice(1));
     if(el) el.value = loadKey(p);
   });
