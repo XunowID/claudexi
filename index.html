@@ -658,7 +658,16 @@ a:hover{text-decoration:underline}
           <option value="groq">Groq (free)</option>
           <option value="gemini">Gemini 2.0 Flash (free)</option>
           <option value="deepseek">DeepSeek (cheap)</option>
+          <option value="openrouter">OpenRouter (many models)</option>
+          <option value="mistral">Mistral AI</option>
+          <option value="opencode">OpenCode AI</option>
+          <option value="glm">GLM (Zhipu AI)</option>
         </select>
+      </div>
+      <div class="setting-row" id="orModelRow">
+        <label for="orModel">OpenRouter Model</label>
+        <input type="text" id="orModel" placeholder="anthropic/claude-3.5-sonnet" oninput="localStorage.setItem('cx_or_model',this.value)">
+        <div class="hint">See openrouter.ai/models for available models</div>
       </div>
       <div class="setting-row">
         <label for="sysPrompt">System Prompt</label>
@@ -688,6 +697,22 @@ a:hover{text-decoration:underline}
         <div class="provider-item">
           <span class="name"><span class="dot no" id="kDeepSeekDot"></span> DeepSeek</span>
           <input class="key-input" id="keyDeepSeek" type="password" placeholder="sk-..." oninput="saveKey('deepseek',this.value);updateKeyStatus()">
+        </div>
+        <div class="provider-item">
+          <span class="name"><span class="dot no" id="kOpenRouterDot"></span> OpenRouter</span>
+          <input class="key-input" id="keyOpenRouter" type="password" placeholder="sk-or-..." oninput="saveKey('openrouter',this.value);updateKeyStatus()">
+        </div>
+        <div class="provider-item">
+          <span class="name"><span class="dot no" id="kMistralDot"></span> Mistral AI</span>
+          <input class="key-input" id="keyMistral" type="password" placeholder="..." oninput="saveKey('mistral',this.value);updateKeyStatus()">
+        </div>
+        <div class="provider-item">
+          <span class="name"><span class="dot no" id="kOpenCodeDot"></span> OpenCode AI</span>
+          <input class="key-input" id="keyOpenCode" type="password" placeholder="oc_..." oninput="saveKey('opencode',this.value);updateKeyStatus()">
+        </div>
+        <div class="provider-item">
+          <span class="name"><span class="dot no" id="kGlmDot"></span> GLM (Zhipu AI)</span>
+          <input class="key-input" id="keyGlm" type="password" placeholder="..." oninput="saveKey('glm',this.value);updateKeyStatus()">
         </div>
       </div>
     </div>
@@ -757,13 +782,14 @@ function hasKey(provider) {
 }
 
 function updateKeyStatus() {
-  const providers = ['anthropic','openai','groq','gemini','deepseek'];
+  const providers = ['anthropic','openai','groq','gemini','deepseek','openrouter','mistral','opencode','glm'];
   providers.forEach(p => {
-    const dot = document.getElementById('k' + p.charAt(0).toUpperCase() + p.slice(1) + 'Dot');
+    const id = 'k' + p.charAt(0).toUpperCase() + p.slice(1) + 'Dot';
+    const dot = document.getElementById(id);
     if(dot) dot.className = 'dot ' + (hasKey(p) ? 'ok' : 'no');
   });
   // Input fields sync
-  ['anthropic','openai','groq','gemini','deepseek'].forEach(p => {
+  providers.forEach(p => {
     const el = document.getElementById('key' + p.charAt(0).toUpperCase() + p.slice(1));
     if(el && !el.value) el.value = loadKey(p);
   });
@@ -783,6 +809,10 @@ function modelDisplayName(model) {
     'groq': 'Groq (Free)',
     'gemini': 'Gemini 2.0 Flash (Free)',
     'deepseek': 'DeepSeek',
+      'openrouter': 'OpenRouter',
+      'mistral': 'Mistral AI',
+      'opencode': 'OpenCode AI',
+      'glm': 'GLM (Zhipu AI)',
   };
   return names[model] || model;
 }
@@ -793,6 +823,10 @@ function getActiveProvider(model) {
   if(model === 'groq') return 'groq';
   if(model === 'gemini') return 'gemini';
   if(model === 'deepseek') return 'deepseek';
+  if(model === 'openrouter') return 'openrouter';
+  if(model === 'mistral') return 'mistral';
+  if(model === 'opencode') return 'opencode';
+  if(model === 'glm') return 'glm';
   return 'anthropic';
 }
 
@@ -806,6 +840,9 @@ function getModelForProvider(model) {
     'groq': 'llama-3.3-70b-versatile',
     'gemini': 'gemini-2.0-flash',
     'deepseek': 'deepseek-chat',
+    'mistral': 'mistral-large-latest',
+    'opencode': 'opencode-default',
+    'glm': 'glm-4-plus',
   };
   return map[model] || model;
 }
@@ -1044,6 +1081,15 @@ async function sendMessage() {
       await streamGemini(chat, apiKey, model, sysPrompt, temp, maxTok);
     } else if(provider === 'deepseek') {
       await streamOpenAICompat(chat, apiKey, 'https://api.deepseek.com/v1/chat/completions', model, sysPrompt, temp, maxTok);
+    } else if(provider === 'openrouter') {
+      const orModel = document.getElementById('orModel').value.trim() || 'anthropic/claude-3.5-sonnet';
+      await streamOpenAICompat(chat, apiKey, 'https://openrouter.ai/api/v1/chat/completions', orModel, sysPrompt, temp, maxTok);
+    } else if(provider === 'mistral') {
+      await streamOpenAICompat(chat, apiKey, 'https://api.mistral.ai/v1/chat/completions', model, sysPrompt, temp, maxTok);
+    } else if(provider === 'opencode') {
+      await streamOpenAICompat(chat, apiKey, 'https://api.opencode.ai/v1/chat/completions', model, sysPrompt, temp, maxTok);
+    } else if(provider === 'glm') {
+      await streamOpenAICompat(chat, apiKey, 'https://open.bigmodel.cn/api/paas/v4/chat/completions', model, sysPrompt, temp, maxTok);
     }
   } catch(err) {
     appendToLastAssistant('❌ **Error:** ' + err.message);
@@ -1303,6 +1349,10 @@ function closeSettings() {
   saveKey('groq', document.getElementById('keyGroq').value);
   saveKey('gemini', document.getElementById('keyGemini').value);
   saveKey('deepseek', document.getElementById('keyDeepSeek').value);
+  saveKey('openrouter', document.getElementById('keyOpenRouter').value);
+  saveKey('mistral', document.getElementById('keyMistral').value);
+  saveKey('opencode', document.getElementById('keyOpenCode').value);
+  saveKey('glm', document.getElementById('keyGlm').value);
   updateKeyStatus();
 }
 
@@ -1354,7 +1404,7 @@ function init() {
   document.getElementById('currentModelDisplay').textContent = modelDisplayName(APP.currentModel);
 
   // Load saved keys into inputs
-  ['anthropic','openai','groq','gemini','deepseek'].forEach(p => {
+  ['anthropic','openai','groq','gemini','deepseek','openrouter','mistral','opencode','glm'].forEach(p => {
     const el = document.getElementById('key' + p.charAt(0).toUpperCase() + p.slice(1));
     if(el) el.value = loadKey(p);
   });
