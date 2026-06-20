@@ -1,0 +1,1381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ClaudeXI — Free AI Chat Interface</title>
+<meta name="description" content="Free, open-source AI chat interface. Bring your own API key. Multi-provider support.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+<style>
+/* ══════════════════════════════════════════════════
+   CLAUDEXI — DESIGN SYSTEM
+   Inspired by UI-UX-Pro-Max: AI-Native UI + Dark Glass
+   ══════════════════════════════════════════════════ */
+
+:root {
+  --bg-deep: #08080e;
+  --bg-surface: #0d0d18;
+  --bg-card: rgba(255,255,255,0.03);
+  --bg-card-hover: rgba(255,255,255,0.06);
+  --bg-glass: rgba(13,13,24,0.85);
+  --border: rgba(255,255,255,0.06);
+  --border-hover: rgba(255,255,255,0.12);
+  --text-primary: #e8e8ed;
+  --text-secondary: #92929e;
+  --text-muted: #5c5c6e;
+  --accent: #f59e0b;
+  --accent-glow: rgba(245,158,11,0.15);
+  --accent-purple: #8b5cf6;
+  --success: #22c55e;
+  --error: #ef4444;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --transition: 200ms ease;
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --shadow-card: 0 2px 20px rgba(0,0,0,0.3);
+  --shadow-glow: 0 0 30px var(--accent-glow);
+}
+
+/* Reset & Base */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px;scroll-behavior:smooth}
+body{
+  font-family:var(--font-sans);
+  background:var(--bg-deep);
+  color:var(--text-primary);
+  min-height:100vh;
+  display:flex;
+  overflow:hidden;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+::selection{background:var(--accent);color:#000}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:var(--radius-sm)}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:0ms!important;animation-duration:0ms!important}}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border-hover);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--text-muted)}
+
+/* ═══ LAYOUT ═══ */
+.app{display:flex;width:100vw;height:100vh}
+
+/* Sidebar */
+.sidebar{
+  width:280px;
+  background:var(--bg-surface);
+  border-right:1px solid var(--border);
+  display:flex;
+  flex-direction:column;
+  flex-shrink:0;
+  transition:transform var(--transition);
+}
+.sidebar-header{
+  padding:18px 20px;
+  border-bottom:1px solid var(--border);
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.sidebar-logo{
+  width:32px;height:32px;
+  background:linear-gradient(135deg,var(--accent),var(--accent-purple));
+  border-radius:var(--radius-md);
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;font-weight:700;color:#000;flex-shrink:0;
+}
+.sidebar-title{font-size:15px;font-weight:600;letter-spacing:-0.3px}
+.sidebar-sub{font-size:11px;color:var(--text-muted);margin-top:-2px}
+
+/* New chat button */
+.new-chat-btn{
+  margin:12px 16px;
+  padding:10px 16px;
+  background:var(--bg-card);
+  border:1px dashed var(--border-hover);
+  border-radius:var(--radius-md);
+  color:var(--text-secondary);
+  font-size:13px;
+  font-family:var(--font-sans);
+  cursor:pointer;
+  transition:all var(--transition);
+  display:flex;align-items:center;gap:8px;
+}
+.new-chat-btn:hover{background:var(--bg-card-hover);border-color:var(--accent);color:var(--text-primary)}
+
+/* Chat list */
+.chat-list{flex:1;overflow-y:auto;padding:4px 12px}
+.chat-item{
+  padding:10px 12px;
+  border-radius:var(--radius-md);
+  cursor:pointer;
+  transition:background var(--transition);
+  font-size:13px;
+  color:var(--text-secondary);
+  display:flex;align-items:center;gap:8px;
+  margin-bottom:2px;
+  position:relative;
+}
+.chat-item:hover{background:var(--bg-card-hover);color:var(--text-primary)}
+.chat-item.active{background:var(--accent-glow);color:var(--text-primary)}
+.chat-item .title{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chat-item .del-btn{
+  opacity:0;
+  background:none;border:none;color:var(--text-muted);cursor:pointer;
+  font-size:14px;padding:2px 4px;border-radius:4px;
+  transition:all var(--transition);
+}
+.chat-item:hover .del-btn{opacity:1}
+.chat-item .del-btn:hover{color:var(--error);background:rgba(239,68,68,0.1)}
+
+/* Sidebar footer */
+.sidebar-footer{
+  padding:14px 16px;
+  border-top:1px solid var(--border);
+  font-size:11px;
+  color:var(--text-muted);
+  display:flex;flex-direction:column;gap:6px;
+}
+.sidebar-footer a{color:var(--text-muted)}
+.sidebar-footer a:hover{color:var(--accent)}
+
+/* ═══ MAIN PANEL ═══ */
+.main{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  min-width:0;
+  position:relative;
+}
+.main-header{
+  padding:14px 24px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  gap:12px;
+  flex-shrink:0;
+}
+.main-header-left{display:flex;align-items:center;gap:12px}
+.menu-btn{
+  display:none;
+  background:none;border:none;color:var(--text-secondary);
+  font-size:22px;cursor:pointer;padding:4px;
+}
+.model-badge{
+  font-size:13px;font-weight:500;
+  color:var(--text-secondary);
+  background:var(--bg-card);
+  padding:4px 12px;
+  border-radius:20px;
+  border:1px solid var(--border);
+}
+.model-badge strong{color:var(--accent);font-weight:600}
+
+/* Settings button group */
+.header-actions{display:flex;gap:6px;align-items:center}
+.icon-btn{
+  background:none;border:none;color:var(--text-muted);
+  width:34px;height:34px;border-radius:var(--radius-sm);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-size:18px;transition:all var(--transition);
+  position:relative;
+}
+.icon-btn:hover{background:var(--bg-card-hover);color:var(--text-primary)}
+.icon-btn .badge{
+  position:absolute;top:2px;right:2px;
+  width:8px;height:8px;border-radius:50%;
+  background:var(--accent);
+}
+
+/* ═══ CHAT AREA ═══ */
+.chat-area{
+  flex:1;
+  overflow-y:auto;
+  padding:0;
+  display:flex;
+  flex-direction:column;
+}
+
+/* Empty state */
+.empty-state{
+  flex:1;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:40px 24px;
+  text-align:center;
+}
+.empty-state .icon{
+  width:72px;height:72px;
+  background:linear-gradient(135deg,var(--accent-glow),rgba(139,92,246,0.1));
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:32px;
+  margin-bottom:20px;
+}
+.empty-state h2{font-size:22px;font-weight:600;margin-bottom:6px}
+.empty-state p{color:var(--text-secondary);font-size:14px;max-width:400px;margin-bottom:24px}
+.empty-state .tips{
+  display:grid;grid-template-columns:1fr 1fr;gap:8px;max-width:420px;width:100%;
+}
+.empty-state .tip-card{
+  background:var(--bg-card);
+  border:1px solid var(--border);
+  border-radius:var(--radius-md);
+  padding:12px 14px;
+  text-align:left;
+  cursor:pointer;
+  transition:all var(--transition);
+  font-size:12px;
+  color:var(--text-secondary);
+}
+.empty-state .tip-card:hover{background:var(--bg-card-hover);border-color:var(--accent);color:var(--text-primary)}
+.empty-state .tip-card .label{font-size:10px;text-transform:uppercase;color:var(--accent);font-weight:600;letter-spacing:0.5px;margin-bottom:4px}
+
+/* Messages */
+.messages{
+  padding:20px 0;
+  flex:1;
+}
+.msg{
+  padding:16px 24px;
+  display:flex;
+  gap:14px;
+  animation:fadeIn 200ms ease;
+}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.msg.assistant{background:rgba(255,255,255,0.01)}
+.msg-avatar{
+  width:32px;height:32px;border-radius:var(--radius-md);
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;flex-shrink:0;margin-top:2px;
+}
+.msg.user .msg-avatar{background:linear-gradient(135deg,#3b82f6,#6366f1);color:#fff}
+.msg.assistant .msg-avatar{background:linear-gradient(135deg,var(--accent),var(--accent-purple));color:#000}
+.msg-content{flex:1;min-width:0;font-size:14px;line-height:1.7}
+.msg-content p{margin-bottom:10px}
+.msg-content p:last-child{margin-bottom:0}
+.msg-content strong{font-weight:600}
+.msg-content em{font-style:italic}
+
+/* Code blocks in messages */
+.msg-content pre{
+  background:#0d1117;
+  border:1px solid var(--border);
+  border-radius:var(--radius-md);
+  padding:14px 16px;
+  margin:10px 0;
+  overflow-x:auto;
+  position:relative;
+  font-size:13px;
+  line-height:1.5;
+}
+.msg-content pre code{
+  font-family:var(--font-mono);
+  font-size:13px;
+  background:none;
+  padding:0;
+}
+.msg-content code{
+  font-family:var(--font-mono);
+  background:rgba(245,158,11,0.1);
+  padding:1px 5px;
+  border-radius:4px;
+  font-size:13px;
+  color:var(--accent);
+}
+.msg-content .code-header{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:6px 16px;background:#151b23;border-bottom:1px solid var(--border);
+  margin:-14px -16px 10px -16px;border-radius:var(--radius-md) var(--radius-md) 0 0;
+  font-size:11px;color:var(--text-muted);
+}
+.copy-code-btn{
+  background:none;border:none;color:var(--text-muted);cursor:pointer;
+  font-size:12px;padding:2px 8px;border-radius:4px;transition:all var(--transition);
+}
+.copy-code-btn:hover{color:var(--text-primary);background:var(--bg-card-hover)}
+.msg-content ul,.msg-content ol{padding-left:20px;margin:8px 0}
+.msg-content li{margin-bottom:4px}
+.msg-content blockquote{
+  border-left:3px solid var(--accent);
+  padding-left:14px;
+  margin:10px 0;
+  color:var(--text-secondary);
+  font-style:italic;
+}
+.msg-content h1,.msg-content h2,.msg-content h3,.msg-content h4{margin:16px 0 8px;font-weight:600;line-height:1.3}
+.msg-content h1{font-size:20px}
+.msg-content h2{font-size:18px}
+.msg-content h3{font-size:16px}
+.msg-content table{border-collapse:collapse;margin:10px 0;width:100%;font-size:13px}
+.msg-content th,.msg-content td{border:1px solid var(--border);padding:8px 12px;text-align:left}
+.msg-content th{background:var(--bg-card);font-weight:600}
+.msg-content a{color:var(--accent)}
+
+/* Streaming cursor */
+.msg-content .cursor{display:inline-block;width:2px;height:1em;background:var(--accent);animation:blink 0.8s infinite;vertical-align:text-bottom;margin-left:2px}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* Message actions */
+.msg-actions{
+  display:flex;gap:4px;margin-top:8px;opacity:0;transition:opacity var(--transition)
+}
+.msg:hover .msg-actions{opacity:1}
+.msg-action{
+  background:none;border:none;color:var(--text-muted);
+  font-size:12px;padding:4px 8px;border-radius:4px;cursor:pointer;
+  transition:all var(--transition);
+}
+.msg-action:hover{background:var(--bg-card-hover);color:var(--text-primary)}
+
+/* ═══ INPUT AREA ═══ */
+.input-area{
+  padding:12px 24px 20px;
+  flex-shrink:0;
+}
+.input-container{
+  max-width:800px;
+  margin:0 auto;
+  background:var(--bg-surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius-lg);
+  padding:8px 10px;
+  transition:border-color var(--transition);
+  position:relative;
+}
+.input-container:focus-within{border-color:var(--accent);box-shadow:var(--shadow-glow)}
+.input-tools{
+  display:flex;align-items:center;gap:4px;
+  padding:0 4px 6px 4px;
+}
+.input-tool-btn{
+  background:none;border:none;color:var(--text-muted);
+  font-size:11px;padding:3px 8px;border-radius:4px;cursor:pointer;
+  transition:all var(--transition);font-family:var(--font-sans);
+  display:flex;align-items:center;gap:4px;
+}
+.input-tool-btn:hover{color:var(--text-primary);background:var(--bg-card-hover)}
+.input-tool-btn.active{color:var(--accent);background:var(--accent-glow)}
+.input-row{
+  display:flex;align-items:flex-end;gap:8px;
+}
+#chatInput{
+  flex:1;
+  background:none;border:none;
+  color:var(--text-primary);
+  font-family:var(--font-sans);
+  font-size:14px;
+  line-height:1.5;
+  padding:4px 8px;
+  resize:none;
+  outline:none;
+  max-height:200px;
+  min-height:24px;
+}
+#chatInput::placeholder{color:var(--text-muted)}
+.send-btn{
+  width:38px;height:38px;
+  background:linear-gradient(135deg,var(--accent),var(--accent-purple));
+  border:none;border-radius:var(--radius-md);
+  color:#000;
+  font-size:18px;
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all var(--transition);
+  flex-shrink:0;
+}
+.send-btn:hover{transform:scale(1.05);opacity:0.9}
+.send-btn:disabled{opacity:0.3;cursor:not-allowed;transform:none}
+.send-btn.loading{animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+
+/* ═══ SETTINGS PANEL ═══ */
+.settings-overlay{
+  position:fixed;inset:0;z-index:100;
+  background:rgba(0,0,0,0.6);
+  backdrop-filter:blur(4px);
+  opacity:0;visibility:hidden;
+  transition:all var(--transition);
+}
+.settings-overlay.show{opacity:1;visibility:visible}
+.settings-panel{
+  position:fixed;top:0;right:0;bottom:0;
+  width:400px;max-width:90vw;
+  background:var(--bg-surface);
+  border-left:1px solid var(--border);
+  z-index:101;
+  display:flex;flex-direction:column;
+  transform:translateX(100%);
+  transition:transform 300ms ease;
+  box-shadow:-4px 0 30px rgba(0,0,0,0.4);
+}
+.settings-panel.show{transform:translateX(0)}
+
+.settings-header{
+  padding:18px 20px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.settings-header h2{font-size:16px;font-weight:600}
+.settings-close{
+  background:none;border:none;color:var(--text-muted);
+  font-size:20px;cursor:pointer;padding:4px;border-radius:4px;
+}
+.settings-close:hover{color:var(--text-primary);background:var(--bg-card-hover)}
+.settings-body{flex:1;overflow-y:auto;padding:20px}
+
+.setting-group{margin-bottom:24px}
+.setting-group h3{
+  font-size:11px;text-transform:uppercase;letter-spacing:0.8px;
+  color:var(--text-muted);font-weight:600;margin-bottom:10px;
+}
+.setting-row{
+  margin-bottom:14px;
+}
+.setting-row label{
+  display:block;font-size:13px;color:var(--text-secondary);margin-bottom:5px;font-weight:500;
+}
+.setting-row .hint{font-size:11px;color:var(--text-muted);margin-top:4px}
+.setting-row select,.setting-row input[type="text"],.setting-row textarea{
+  width:100%;
+  background:var(--bg-deep);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  color:var(--text-primary);
+  padding:8px 12px;
+  font-size:13px;
+  font-family:var(--font-sans);
+  outline:none;
+  transition:border var(--transition);
+}
+.setting-row select:focus,.setting-row input[type="text"]:focus,.setting-row textarea:focus{
+  border-color:var(--accent);
+}
+.setting-row select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2392929e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:30px}
+.setting-row textarea{min-height:80px;resize:vertical}
+.setting-row input[type="range"]{
+  width:100%;height:4px;appearance:none;
+  background:var(--border-hover);border-radius:2px;outline:none;
+}
+.setting-row input[type="range"]::-webkit-slider-thumb{
+  appearance:none;width:16px;height:16px;
+  background:var(--accent);border-radius:50%;cursor:pointer;
+}
+.range-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-top:2px}
+.provider-status{
+  display:flex;flex-direction:column;gap:6px;
+}
+.provider-item{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:8px 12px;background:var(--bg-deep);
+  border:1px solid var(--border);border-radius:var(--radius-sm);
+  font-size:13px;
+}
+.provider-item .name{display:flex;align-items:center;gap:6px}
+.provider-item .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.provider-item .dot.ok{background:var(--success)}
+.provider-item .dot.no{background:var(--text-muted)}
+.provider-item .key-input{
+  background:none;border:1px solid var(--border);border-radius:4px;
+  color:var(--text-primary);padding:2px 8px;font-size:12px;
+  font-family:var(--font-mono);width:130px;outline:none;
+}
+.provider-item .key-input:focus{border-color:var(--accent)}
+
+/* Toggle switch */
+.toggle{position:relative;display:inline-block;width:36px;height:20px;cursor:pointer}
+.toggle input{opacity:0;width:0;height:0}
+.toggle .slider{
+  position:absolute;inset:0;background:var(--border-hover);border-radius:10px;transition:var(--transition);
+}
+.toggle .slider::before{
+  content:'';position:absolute;width:16px;height:16px;border-radius:50%;
+  background:var(--text-primary);top:2px;left:2px;transition:var(--transition);
+}
+.toggle input:checked+.slider{background:var(--accent)}
+.toggle input:checked+.slider::before{transform:translateX(16px);background:#000}
+
+/* Export button */
+.export-btn{
+  width:100%;padding:10px;
+  background:var(--bg-card);border:1px solid var(--border);
+  border-radius:var(--radius-sm);color:var(--text-secondary);
+  font-size:13px;font-family:var(--font-sans);cursor:pointer;
+  transition:all var(--transition);margin-top:8px;
+}
+.export-btn:hover{background:var(--bg-card-hover);color:var(--text-primary);border-color:var(--accent)}
+
+/* Changelog / disclaimer */
+.legal-notice{
+  font-size:11px;color:var(--text-muted);line-height:1.6;
+  padding:14px;background:var(--bg-deep);
+  border:1px solid var(--border);border-radius:var(--radius-sm);margin-top:16px;
+}
+.legal-notice strong{color:var(--text-secondary)}
+
+/* Toast */
+.toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
+  background:var(--bg-glass);backdrop-filter:blur(16px);
+  border:1px solid var(--border);border-radius:var(--radius-md);
+  padding:10px 20px;font-size:13px;color:var(--text-primary);
+  opacity:0;transition:all 300ms ease;z-index:200;
+  pointer-events:none;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* Mobile responsive */
+@media(max-width:768px){
+  .sidebar{position:fixed;left:0;top:0;bottom:0;z-index:50;transform:translateX(-100%)}
+  .sidebar.open{transform:translateX(0)}
+  .menu-btn{display:flex}
+  .settings-panel{width:100%;max-width:100vw}
+  .msg{padding:12px 16px}
+  .main-header{padding:10px 16px}
+  .input-area{padding:8px 12px 14px}
+}
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+  <!-- ═══ SIDEBAR ═══ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">XI</div>
+      <div>
+        <div class="sidebar-title">ClaudeXI</div>
+        <div class="sidebar-sub">Free AI Interface</div>
+      </div>
+    </div>
+
+    <button class="new-chat-btn" onclick="newChat()">+ New Chat</button>
+
+    <div class="chat-list" id="chatList"></div>
+
+    <div class="sidebar-footer">
+      <span>BYO API Key · No tracking</span>
+      <span><a href="#" onclick="openSettings()">Settings</a> · <a href="https://github.com/XunowID/claudexi" target="_blank">GitHub</a></span>
+    </div>
+  </aside>
+
+  <!-- ═══ MAIN ═══ -->
+  <main class="main">
+    <header class="main-header">
+      <div class="main-header-left">
+        <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+        <span class="model-badge">⚡ <strong id="currentModelDisplay">Claude</strong></span>
+      </div>
+      <div class="header-actions">
+        <button class="icon-btn" id="keyStatusBtn" onclick="openSettings()" title="API Key Status">
+          <span id="keyStatusIcon">🔑</span>
+        </button>
+        <button class="icon-btn" onclick="openSettings()" title="Settings">⚙️</button>
+        <button class="icon-btn" onclick="clearChat()" title="Clear chat">🗑️</button>
+      </div>
+    </header>
+
+    <div class="chat-area" id="chatArea">
+      <!-- Empty state (shown when no messages) -->
+      <div class="empty-state" id="emptyState">
+        <div class="icon">🤖</div>
+        <h2>ClaudeXI</h2>
+        <p>Free, open-source AI interface. Bring your own API key, chat with multiple models.</p>
+        <div class="tips">
+          <div class="tip-card" onclick="setPrompt('Explain quantum computing in simple terms with examples')">
+            <div class="label">💡 Explain</div>
+            Quantum computing simply
+          </div>
+          <div class="tip-card" onclick="setPrompt('Write a Python script to analyze CSV data and generate charts')">
+            <div class="label">🐍 Code</div>
+            Python data analysis
+          </div>
+          <div class="tip-card" onclick="setPrompt('Summarize the key differences between REST and GraphQL APIs')">
+            <div class="label">📖 Compare</div>
+            REST vs GraphQL
+          </div>
+          <div class="tip-card" onclick="setPrompt('Create a meal plan for a week with recipes and shopping list')">
+            <div class="label">🍳 Plan</div>
+            Weekly meal plan
+          </div>
+        </div>
+      </div>
+
+      <!-- Messages container -->
+      <div class="messages" id="messages"></div>
+
+      <!-- Loading indicator -->
+      <div id="loadingIndicator" style="display:none;padding:12px 24px;text-align:center">
+        <span style="font-size:13px;color:var(--text-muted)">🤔 Thinking...</span>
+      </div>
+    </div>
+
+    <!-- ═══ INPUT ═══ -->
+    <div class="input-area">
+      <div class="input-container">
+        <div class="input-tools">
+          <button class="input-tool-btn" id="toolModels" onclick="openSettings()">🧠 Models</button>
+          <span style="flex:1"></span>
+          <span style="font-size:11px;color:var(--text-muted)" id="tokenCount">0</span>
+        </div>
+        <div class="input-row">
+          <textarea id="chatInput" rows="1" placeholder="Message ClaudeXI..." oninput="autoResize(this)" onkeydown="handleKey(event)"></textarea>
+          <button class="send-btn" id="sendBtn" onclick="sendMessage()" title="Send">➤</button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ═══ SETTINGS PANEL ═══ -->
+<div class="settings-overlay" id="settingsOverlay" onclick="closeSettings()"></div>
+<div class="settings-panel" id="settingsPanel">
+  <div class="settings-header">
+    <h2>⚙️ Settings</h2>
+    <button class="settings-close" onclick="closeSettings()">✕</button>
+  </div>
+  <div class="settings-body">
+    <div class="setting-group">
+      <h3>🤖 Model</h3>
+      <div class="setting-row">
+        <label for="modelSelect">Provider</label>
+        <select id="modelSelect" onchange="onModelChange()">
+          <option value="claude-3.5-haiku">Claude 3.5 Haiku (fast)</option>
+          <option value="claude-3.5-sonnet">Claude 3.5 Sonnet (balanced)</option>
+          <option value="claude-opus-4">Claude Opus 4 (best)</option>
+          <option value="gpt-4o">GPT-4o</option>
+          <option value="gpt-4o-mini">GPT-4o Mini (fast)</option>
+          <option value="groq">Groq (free)</option>
+          <option value="gemini">Gemini 2.0 Flash (free)</option>
+          <option value="deepseek">DeepSeek (cheap)</option>
+        </select>
+      </div>
+      <div class="setting-row">
+        <label for="sysPrompt">System Prompt</label>
+        <textarea id="sysPrompt" placeholder="Optional system prompt...">You are ClaudeXI, a helpful, harmless, and honest AI assistant.</textarea>
+      </div>
+    </div>
+
+    <div class="setting-group">
+      <h3>🔑 API Keys</h3>
+      <div class="provider-status" id="providerStatus">
+        <div class="provider-item">
+          <span class="name"><span class="dot no" id="kClaudeDot"></span> Anthropic (Claude)</span>
+          <input class="key-input" id="keyAnthropic" type="password" placeholder="sk-ant-..." oninput="saveKey('anthropic',this.value);updateKeyStatus()">
+        </div>
+        <div class="provider-item">
+          <span class="name"><span class="dot no" id="kOpenAIDot"></span> OpenAI (GPT)</span>
+          <input class="key-input" id="keyOpenAI" type="password" placeholder="sk-..." oninput="saveKey('openai',this.value);updateKeyStatus()">
+        </div>
+        <div class="provider-item">
+          <span class="name"><span class="dot no" id="kGroqDot"></span> Groq (Free)</span>
+          <input class="key-input" id="keyGroq" type="password" placeholder="gsk_..." oninput="saveKey('groq',this.value);updateKeyStatus()">
+        </div>
+        <div class="provider-item">
+          <span class="name"><span class="dot no" id="kGeminiDot"></span> Gemini (Free)</span>
+          <input class="key-input" id="keyGemini" type="password" placeholder="AIza..." oninput="saveKey('gemini',this.value);updateKeyStatus()">
+        </div>
+        <div class="provider-item">
+          <span class="name"><span class="dot no" id="kDeepSeekDot"></span> DeepSeek</span>
+          <input class="key-input" id="keyDeepSeek" type="password" placeholder="sk-..." oninput="saveKey('deepseek',this.value);updateKeyStatus()">
+        </div>
+      </div>
+    </div>
+
+    <div class="setting-group">
+      <h3>🎛️ Parameters</h3>
+      <div class="setting-row">
+        <label>Temperature: <span id="tempVal">0.7</span></label>
+        <input type="range" id="temperature" min="0" max="2" step="0.1" value="0.7" oninput="document.getElementById('tempVal').textContent=this.value">
+        <div class="range-labels"><span>Precise</span><span>Creative</span></div>
+      </div>
+      <div class="setting-row">
+        <label>Max Tokens: <span id="maxTokensVal">4096</span></label>
+        <input type="range" id="maxTokens" min="256" max="16384" step="256" value="4096" oninput="document.getElementById('maxTokensVal').textContent=this.value">
+      </div>
+    </div>
+
+    <div class="setting-group">
+      <h3>💾 Data</h3>
+      <button class="export-btn" onclick="exportChat()">📥 Export Chat (Markdown)</button>
+      <button class="export-btn" onclick="exportChat('json')">📥 Export Chat (JSON)</button>
+    </div>
+
+    <div class="setting-group">
+      <h3>⚖️ Legal</h3>
+      <div class="legal-notice">
+        <strong>ClaudeXI</strong> is an <strong>independent, open-source</strong> interface.<br><br>
+        • Not affiliated with, endorsed by, or connected to Anthropic or OpenAI.<br>
+        • You provide your own API keys. All API calls go directly to the respective providers.<br>
+        • No data is stored on any server — all data stays in your browser (localStorage).<br>
+        • This tool is provided "as is" without warranty. Use at your own risk.<br>
+        • Respect the terms of service of each API provider.<br><br>
+        <a href="https://github.com/XunowID/claudexi" target="_blank">View on GitHub</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TOAST ═══ -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ══════════════════════════════════════════════════
+   CLAUDEXI — APPLICATION LOGIC
+   ══════════════════════════════════════════════════ */
+
+// ─── State ────────────────────────────────────────
+const APP = {
+  chats: JSON.parse(localStorage.getItem('cx_chats') || '[]'),
+  activeChatId: localStorage.getItem('cx_active') || null,
+  currentModel: localStorage.getItem('cx_model') || 'claude-3.5-sonnet',
+  streaming: false,
+  abortController: null,
+};
+
+// ─── Keys (stored in localStorage, never sent anywhere except to API) ──
+function loadKey(provider) {
+  return localStorage.getItem('cx_key_' + provider) || '';
+}
+function saveKey(provider, val) {
+  localStorage.setItem('cx_key_' + provider, val);
+  updateKeyStatus();
+}
+function hasKey(provider) {
+  const k = loadKey(provider);
+  return k && k.length > 8;
+}
+
+function updateKeyStatus() {
+  const providers = ['anthropic','openai','groq','gemini','deepseek'];
+  providers.forEach(p => {
+    const dot = document.getElementById('k' + p.charAt(0).toUpperCase() + p.slice(1) + 'Dot');
+    if(dot) dot.className = 'dot ' + (hasKey(p) ? 'ok' : 'no');
+  });
+  // Input fields sync
+  ['anthropic','openai','groq','gemini','deepseek'].forEach(p => {
+    const el = document.getElementById('key' + p.charAt(0).toUpperCase() + p.slice(1));
+    if(el && !el.value) el.value = loadKey(p);
+  });
+  // Update key status icon
+  const hasAny = providers.some(p => hasKey(p));
+  document.getElementById('keyStatusIcon').textContent = hasAny ? '🔑' : '🔒';
+}
+
+// ─── Chat Model Name ──────────────────────────────
+function modelDisplayName(model) {
+  const names = {
+    'claude-3.5-haiku': 'Claude 3.5 Haiku',
+    'claude-3.5-sonnet': 'Claude 3.5 Sonnet',
+    'claude-opus-4': 'Claude Opus 4',
+    'gpt-4o': 'GPT-4o',
+    'gpt-4o-mini': 'GPT-4o Mini',
+    'groq': 'Groq (Free)',
+    'gemini': 'Gemini 2.0 Flash (Free)',
+    'deepseek': 'DeepSeek',
+  };
+  return names[model] || model;
+}
+
+function getActiveProvider(model) {
+  if(model.startsWith('claude-')) return 'anthropic';
+  if(model.startsWith('gpt-')) return 'openai';
+  if(model === 'groq') return 'groq';
+  if(model === 'gemini') return 'gemini';
+  if(model === 'deepseek') return 'deepseek';
+  return 'anthropic';
+}
+
+function getModelForProvider(model) {
+  const map = {
+    'claude-3.5-haiku': 'claude-3-5-haiku-latest',
+    'claude-3.5-sonnet': 'claude-3-5-sonnet-latest',
+    'claude-opus-4': 'claude-opus-4-20250514',
+    'gpt-4o': 'gpt-4o',
+    'gpt-4o-mini': 'gpt-4o-mini',
+    'groq': 'llama-3.3-70b-versatile',
+    'gemini': 'gemini-2.0-flash',
+    'deepseek': 'deepseek-chat',
+  };
+  return map[model] || model;
+}
+
+// ─── Chat CRUD ────────────────────────────────────
+function saveChats() {
+  localStorage.setItem('cx_chats', JSON.stringify(APP.chats));
+  localStorage.setItem('cx_active', APP.activeChatId);
+  renderChatList();
+}
+
+function getActiveChat() {
+  return APP.chats.find(c => c.id === APP.activeChatId);
+}
+
+function newChat() {
+  const id = Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+  APP.chats.unshift({ id, title: 'New Chat', messages: [], created: Date.now() });
+  APP.activeChatId = id;
+  saveChats();
+  renderMessages();
+  closeSidebar();
+  document.getElementById('chatInput').focus();
+}
+
+function deleteChat(id, e) {
+  e.stopPropagation();
+  APP.chats = APP.chats.filter(c => c.id !== id);
+  if(APP.activeChatId === id) {
+    APP.activeChatId = APP.chats.length > 0 ? APP.chats[0].id : null;
+  }
+  saveChats();
+  renderMessages();
+}
+
+function clearChat() {
+  const chat = getActiveChat();
+  if(!chat) return;
+  chat.messages = [];
+  saveChats();
+  renderMessages();
+}
+
+function selectChat(id) {
+  APP.activeChatId = id;
+  saveChats();
+  renderMessages();
+  closeSidebar();
+}
+
+function setPrompt(text) {
+  document.getElementById('chatInput').value = text;
+  autoResize(document.getElementById('chatInput'));
+  document.getElementById('chatInput').focus();
+}
+
+function updateChatTitle(id, msg) {
+  const chat = APP.chats.find(c => c.id === id);
+  if(!chat || chat.title !== 'New Chat') return;
+  chat.title = msg.slice(0, 50) + (msg.length > 50 ? '...' : '');
+  saveChats();
+}
+
+// ─── Render ───────────────────────────────────────
+function renderChatList() {
+  const el = document.getElementById('chatList');
+  if(APP.chats.length === 0) {
+    el.innerHTML = '<div style="padding:20px;text-align:center;font-size:12px;color:var(--text-muted)">No conversations yet</div>';
+    return;
+  }
+  el.innerHTML = APP.chats.map(c =>
+    `<div class="chat-item ${c.id === APP.activeChatId ? 'active' : ''}" onclick="selectChat('${c.id}')">
+      <span>💬</span>
+      <span class="title">${escHtml(c.title)}</span>
+      <button class="del-btn" onclick="deleteChat('${c.id}',event)">✕</button>
+    </div>`
+  ).join('');
+}
+
+function renderMessages() {
+  const chat = getActiveChat();
+  const emptyEl = document.getElementById('emptyState');
+  const msgEl = document.getElementById('messages');
+
+  if(!chat || chat.messages.length === 0) {
+    emptyEl.style.display = 'flex';
+    msgEl.innerHTML = '';
+    // Clear model display
+    document.getElementById('currentModelDisplay').textContent = modelDisplayName(APP.currentModel);
+    return;
+  }
+
+  emptyEl.style.display = 'none';
+  document.getElementById('currentModelDisplay').textContent = modelDisplayName(APP.currentModel);
+
+  msgEl.innerHTML = chat.messages.map((m, i) => `
+    <div class="msg ${m.role}" id="msg-${i}">
+      <div class="msg-avatar">${m.role === 'user' ? '👤' : '🤖'}</div>
+      <div class="msg-content">${m.role === 'user' ? escHtml(m.content).replace(/\n/g,'<br>') : renderMarkdown(m.content)}</div>
+    </div>
+  `).join('');
+
+  // Highlight code blocks
+  msgEl.querySelectorAll('pre code').forEach(block => hljs.highlightElement(block));
+
+  // Scroll to bottom
+  document.getElementById('chatArea').scrollTop = document.getElementById('chatArea').scrollHeight;
+}
+
+function renderMarkdown(text) {
+  if(!text) return '';
+  // Escape HTML first
+  let html = escHtml(text);
+
+  // Code blocks (fenced) — must be before inline code
+  html = html.replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) => {
+    const langAttr = lang ? ` class="language-${lang}"` : '';
+    return `<pre><div class="code-header"><span>${lang || 'code'}</span><button class="copy-code-btn" onclick="copyText(this.parentElement.nextElementSibling.textContent)">📋 Copy</button></div><code${langAttr}>${code.trim()}</code></pre>`;
+  });
+
+  // Inline code
+  html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+  // Headers
+  html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+  html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+  html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+
+  // Bold & italic
+  html = html.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+
+  // Blockquotes
+  html = html.replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>');
+
+  // Horizontal rules
+  html = html.replace(/^---$/gm, '<hr>');
+
+  // Unordered lists
+  html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
+  html = html.replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>');
+
+  // Ordered lists
+  html = html.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
+
+  // Links
+  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+
+  // Paragraphs (double newlines)
+  html = html.replace(/\n\n/g, '</p><p>');
+  html = '<p>' + html + '</p>';
+
+  // Clean up nested paragraphs from headers/lists
+  html = html.replace(/<p><h([1-6])>/g, '<h$1>');
+  html = html.replace(/<\/h([1-6])><\/p>/g, '</h$1>');
+  html = html.replace(/<p><(ul|ol|li|blockquote|hr|pre)/g, '<$1');
+  html = html.replace(/<\/(ul|ol|li|blockquote|hr|pre)><\/p>/g, '</$1>');
+  html = html.replace(/<p><\/p>/g, '');
+
+  return html;
+}
+
+function escHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function copyText(text) {
+  navigator.clipboard.writeText(text).then(() => showToast('📋 Copied!'));
+}
+
+// ─── Send Message ────────────────────────────────
+async function sendMessage() {
+  if(APP.streaming) return;
+
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if(!text) return;
+
+  // Ensure active chat
+  if(!getActiveChat()) newChat();
+  const chat = getActiveChat();
+  if(!chat) return;
+
+  // Add user message
+  chat.messages.push({ role: 'user', content: text });
+  updateChatTitle(chat.id, text);
+  saveChats();
+
+  input.value = '';
+  autoResize(input);
+  document.getElementById('tokenCount').textContent = '0';
+
+  // Show empty state
+  renderMessages();
+
+  // Add assistant placeholder
+  chat.messages.push({ role: 'assistant', content: '' });
+  saveChats();
+  renderMessages();
+
+  // Start streaming
+  APP.streaming = true;
+  const sendBtn = document.getElementById('sendBtn');
+  sendBtn.disabled = true;
+  sendBtn.textContent = '⏳';
+  sendBtn.classList.add('loading');
+
+  try {
+    const model = APP.currentModel;
+    const provider = getActiveProvider(model);
+    const apiKey = loadKey(provider);
+
+    if(!apiKey) {
+      appendToLastAssistant('⚠️ **API key not configured.** Please open Settings and add your API key for ' + provider + '.');
+      APP.streaming = false;
+      sendBtn.disabled = false;
+      sendBtn.textContent = '➤';
+      sendBtn.classList.remove('loading');
+      return;
+    }
+
+    const sysPrompt = document.getElementById('sysPrompt').value || 'You are ClaudeXI, a helpful AI assistant.';
+    const temp = parseFloat(document.getElementById('temperature').value);
+    const maxTok = parseInt(document.getElementById('maxTokens').value);
+
+    if(provider === 'anthropic') {
+      await streamAnthropic(chat, apiKey, model, sysPrompt, temp, maxTok);
+    } else if(provider === 'openai') {
+      await streamOpenAI(chat, apiKey, model, sysPrompt, temp, maxTok);
+    } else if(provider === 'groq') {
+      await streamOpenAICompat(chat, apiKey, 'https://api.groq.com/openai/v1/chat/completions', model, sysPrompt, temp, maxTok);
+    } else if(provider === 'gemini') {
+      await streamGemini(chat, apiKey, model, sysPrompt, temp, maxTok);
+    } else if(provider === 'deepseek') {
+      await streamOpenAICompat(chat, apiKey, 'https://api.deepseek.com/v1/chat/completions', model, sysPrompt, temp, maxTok);
+    }
+  } catch(err) {
+    appendToLastAssistant('❌ **Error:** ' + err.message);
+  }
+
+  APP.streaming = false;
+  sendBtn.disabled = false;
+  sendBtn.textContent = '➤';
+  sendBtn.classList.remove('loading');
+  renderMessages();
+}
+
+// ─── Stream: Anthropic ───────────────────────────
+async function streamAnthropic(chat, key, modelId, sysPrompt, temp, maxTok) {
+  const model = getModelForProvider(modelId);
+  const messages = buildMessages(chat, 'assistant');
+
+  const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': key,
+      'anthropic-version': '2023-06-01',
+    },
+    body: JSON.stringify({
+      model,
+      max_tokens: maxTok,
+      system: sysPrompt,
+      messages,
+      temperature: temp,
+      stream: true,
+    }),
+  });
+
+  await processStream(resp, (text) => appendToLastAssistant(text, true));
+}
+
+// ─── Stream: OpenAI ──────────────────────────────
+async function streamOpenAI(chat, key, modelId, sysPrompt, temp, maxTok) {
+  const model = getModelForProvider(modelId);
+  const messages = buildMessages(chat, 'assistant', sysPrompt);
+
+  const resp = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + key,
+    },
+    body: JSON.stringify({
+      model,
+      messages: [{role:'system',content:sysPrompt}, ...messages],
+      temperature: temp,
+      max_tokens: maxTok,
+      stream: true,
+    }),
+  });
+
+  await processStream(resp, (text) => appendToLastAssistant(text, true), 'openai');
+}
+
+// ─── Stream: OpenAI Compatible (Groq, DeepSeek) ──
+async function streamOpenAICompat(chat, key, baseUrl, modelId, sysPrompt, temp, maxTok) {
+  const model = getModelForProvider(modelId);
+  const messages = buildMessages(chat, 'assistant', sysPrompt);
+
+  const resp = await fetch(baseUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + key,
+    },
+    body: JSON.stringify({
+      model,
+      messages: [{role:'system',content:sysPrompt}, ...messages],
+      temperature: temp,
+      max_tokens: maxTok,
+      stream: true,
+    }),
+  });
+
+  await processStream(resp, (text) => appendToLastAssistant(text, true), 'openai');
+}
+
+// ─── Stream: Gemini ──────────────────────────────
+async function streamGemini(chat, key, modelId, sysPrompt, temp, maxTok) {
+  const model = getModelForProvider(modelId);
+  const messages = buildMessages(chat, 'assistant');
+
+  // Gemini uses a different API format
+  const contents = [];
+  if(sysPrompt) {
+    contents.push({ role: 'user', parts: [{ text: 'System: ' + sysPrompt + '\n\n---\n' }] });
+    contents.push({ role: 'model', parts: [{ text: 'Understood. I will follow these instructions.' }] });
+  }
+  messages.forEach(m => {
+    contents.push({
+      role: m.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: m.content }],
+    });
+  });
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${key}`;
+
+  const resp = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents,
+      generationConfig: {
+        temperature: temp,
+        maxOutputTokens: maxTok,
+      },
+    }),
+  });
+
+  await processStream(resp, (text) => appendToLastAssistant(text, true), 'gemini');
+}
+
+// ─── Stream Processing ───────────────────────────
+function processStream(resp, onChunk, format = 'anthropic') {
+  if(!resp.ok) {
+    return resp.text().then(body => {
+      let msg = `HTTP ${resp.status}`;
+      try { const j = JSON.parse(body); msg = j.error?.message || j.error?.code || body; } catch(e) { msg = body; }
+      throw new Error(msg.slice(0, 200));
+    });
+  }
+
+  return new Promise((resolve, reject) => {
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    function read() {
+      reader.read().then(({ done, value }) => {
+        if(done) { resolve(); return; }
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for(const line of lines) {
+          if(!line.trim() || line.startsWith(':')) continue;
+
+          if(format === 'openai' || format === 'gemini') {
+            if(line.startsWith('data: ')) {
+              const data = line.slice(6).trim();
+              if(data === '[DONE]') continue;
+              try {
+                const json = JSON.parse(data);
+                if(format === 'openai') {
+                  const delta = json.choices?.[0]?.delta?.content || json.choices?.[0]?.text || '';
+                  if(delta) onChunk(delta);
+                } else if(format === 'gemini') {
+                  const text = json.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                  if(text) onChunk(text);
+                }
+              } catch(e) { /* skip malformed */ }
+            }
+          } else {
+            // Anthropic SSE format
+            if(line.startsWith('data: ')) {
+              const data = line.slice(6).trim();
+              if(!data || data === '[DONE]') continue;
+              try {
+                const json = JSON.parse(data);
+                if(json.type === 'content_block_delta' && json.delta?.text) {
+                  onChunk(json.delta.text);
+                }
+              } catch(e) { /* skip */ }
+            }
+          }
+        }
+
+        read();
+      }).catch(reject);
+    }
+
+    read();
+  });
+}
+
+// ─── Helpers ─────────────────────────────────────
+function buildMessages(chat, lastRole, sysPrompt) {
+  const msgs = chat.messages.filter(m => m.content !== '');
+  // Remove last assistant message if it's the one being streamed
+  if(lastRole === 'assistant' && msgs.length > 0 && msgs[msgs.length-1].role === 'assistant') {
+    msgs.pop();
+  }
+  return msgs.map(m => ({ role: m.role, content: m.content }));
+}
+
+function appendToLastAssistant(text, append = false) {
+  const chat = getActiveChat();
+  if(!chat || chat.messages.length === 0) return;
+
+  const last = chat.messages[chat.messages.length - 1];
+  if(last.role !== 'assistant') return;
+
+  if(append) {
+    last.content += text;
+  } else {
+    last.content = text;
+  }
+
+  saveChats();
+  // Live update the streaming message
+  const msgEl = document.getElementById('messages');
+  const lastMsg = msgEl?.lastElementChild;
+  if(lastMsg && lastMsg.classList.contains('assistant')) {
+    const contentEl = lastMsg.querySelector('.msg-content');
+    if(contentEl) {
+      contentEl.innerHTML = renderMarkdown(last.content) + '<span class="cursor"></span>';
+      // Highlight any code blocks
+      contentEl.querySelectorAll('pre code').forEach(block => hljs.highlightElement(block));
+    }
+  }
+
+  // Auto-scroll
+  document.getElementById('chatArea').scrollTop = document.getElementById('chatArea').scrollHeight;
+}
+
+// ─── UI ──────────────────────────────────────────
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 200) + 'px';
+  // Count tokens (rough estimate)
+  const text = el.value;
+  const tokens = text ? Math.ceil(text.length / 4) : 0;
+  document.getElementById('tokenCount').textContent = tokens;
+}
+
+function handleKey(e) {
+  if(e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+}
+
+function openSettings() {
+  document.getElementById('settingsOverlay').classList.add('show');
+  document.getElementById('settingsPanel').classList.add('show');
+  updateKeyStatus(); // Sync key fields
+}
+function closeSettings() {
+  document.getElementById('settingsOverlay').classList.remove('show');
+  document.getElementById('settingsPanel').classList.remove('show');
+  saveKey('anthropic', document.getElementById('keyAnthropic').value);
+  saveKey('openai', document.getElementById('keyOpenAI').value);
+  saveKey('groq', document.getElementById('keyGroq').value);
+  saveKey('gemini', document.getElementById('keyGemini').value);
+  saveKey('deepseek', document.getElementById('keyDeepSeek').value);
+  updateKeyStatus();
+}
+
+function onModelChange() {
+  APP.currentModel = document.getElementById('modelSelect').value;
+  localStorage.setItem('cx_model', APP.currentModel);
+  document.getElementById('currentModelDisplay').textContent = modelDisplayName(APP.currentModel);
+}
+
+// Export
+function exportChat(format = 'md') {
+  const chat = getActiveChat();
+  if(!chat || chat.messages.length === 0) {
+    showToast('⚠️ No messages to export');
+    return;
+  }
+
+  let content;
+  if(format === 'json') {
+    content = JSON.stringify(chat.messages, null, 2);
+  } else {
+    content = '# ' + chat.title + '\n\n';
+    chat.messages.forEach(m => {
+      content += `## ${m.role === 'user' ? 'User' : 'ClaudeXI'}\n\n${m.content}\n\n`;
+    });
+  }
+
+  const blob = new Blob([content], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = chat.title.replace(/[^a-z0-9]/gi, '_').toLowerCase() + '.' + (format === 'json' ? 'json' : 'md');
+  a.click();
+  URL.revokeObjectURL(a.href);
+  showToast('📥 Exported!');
+}
+
+// Toast
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(el._timer);
+  el._timer = setTimeout(() => el.classList.remove('show'), 2000);
+}
+
+// ─── Init ────────────────────────────────────────
+function init() {
+  document.getElementById('modelSelect').value = APP.currentModel;
+  document.getElementById('currentModelDisplay').textContent = modelDisplayName(APP.currentModel);
+
+  // Load saved keys into inputs
+  ['anthropic','openai','groq','gemini','deepseek'].forEach(p => {
+    const el = document.getElementById('key' + p.charAt(0).toUpperCase() + p.slice(1));
+    if(el) el.value = loadKey(p);
+  });
+  updateKeyStatus();
+
+  renderChatList();
+  renderMessages();
+
+  // Focus input
+  document.getElementById('chatInput').focus();
+
+  // Keyboard shortcut: Ctrl+Shift+; to open settings
+  document.addEventListener('keydown', e => {
+    if(e.ctrlKey && e.shiftKey && e.key === ';') {
+      e.preventDefault();
+      openSettings();
+    }
+  });
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
